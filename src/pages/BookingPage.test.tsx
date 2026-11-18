@@ -65,6 +65,7 @@ test('shows dates of the window in local time and the slots of the selected date
   expect(screen.getByRole('heading', { level: 1, name: 'Выберите время' })).toBeTruthy()
   expect(search()).toBe('?date=2026-11-18')
   expect(screen.getByRole('button', { name: '12:00' })).toBeTruthy()
+  expect(screen.getByText('Время указано в вашем часовом поясе: Europe/Moscow, GMT+3')).toBeTruthy()
   expect(screen.getByRole('button', { name: /20 нояб/ }).hasAttribute('disabled')).toBe(true)
   expect(screen.getByRole('button', { name: /1 дек/ })).toBeTruthy()
 
@@ -189,6 +190,7 @@ describe('booking a slot', () => {
     ])
     expect(screen.getByText('Знакомство')).toBeTruthy()
     expect(screen.getByText('18 ноября, 12:00')).toBeTruthy()
+    expect(screen.getByText('Часовой пояс: Europe/Moscow, GMT+3')).toBeTruthy()
     expect(screen.getByText('Анна')).toBeTruthy()
     expect(screen.getByText('anna@example.com')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'В каталог' }).getAttribute('href')).toBe('/book')
