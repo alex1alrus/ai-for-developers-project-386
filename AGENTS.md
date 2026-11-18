@@ -10,7 +10,7 @@ Tools and tasks live in `mise.toml` (Node, hk, pitchfork pinned there).
 - `mise run dev` — start daemons: API on `127.0.0.1:3000`, Vite on `127.0.0.1:5173` (proxies `/api`). `mise daemons status|logs|stop` to manage.
 - `mise run lint` — oxlint.
 - `mise run typecheck` — `tsc -b` for web and server.
-- `mise run test` — Vitest.
+- `mise run test` — Vitest. Single test: `npx vitest run server/app.test.ts -t "<name>"`.
 - `mise run check` — lint, typecheck, test and build; the same command runs in the pre-commit hook (hk) and GitHub Actions.
 - `mise run build` — production build of the frontend into `dist/`.
 
