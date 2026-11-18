@@ -1,0 +1,54 @@
+[settings]
+experimental = true
+
+[tools]
+hk = "2.13.0"
+node = "24.22.3"
+pitchfork = "2.35.0"
+
+[hooks]
+postinstall = { task = "setup" }
+
+[tasks.deps]
+description = "Install npm dependencies when package-lock.json changes"
+run = "npm ci"
+sources = ["package-lock.json"]
+outputs = ["node_modules/.package-lock.json"]
+
+[tasks.setup]
+description = "Install npm dependencies and git hooks"
+depends = ["deps"]
+run = "hk install --mise"
+
+[tasks.dev]
+depends = ["deps"]
+description = "Start API (3000) and web (5173) daemons"
+run = "mise daemons start api web"
+
+[tasks.lint]
+depends = ["deps"]
+run = "npm run lint"
+
+[tasks.typecheck]
+depends = ["deps"]
+run = "npm run typecheck"
+
+[tasks.test]
+depends = ["deps"]
+run = "npm test"
+
+[tasks.build]
+depends = ["deps"]
+run = "npm run build"
+
+[tasks.check]
+description = "All checks: local, git hooks and CI"
+depends = ["lint", "typecheck", "test", "build"]
+
+[daemons.api]
+run = "exec npm run dev:server"
+ready_port = 3000
+
+[daemons.web]
+run = "exec npm run dev:web"
+ready_port = 5173
