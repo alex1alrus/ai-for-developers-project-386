@@ -23,6 +23,7 @@ Tools and tasks live in `mise.toml` (Node, hk, pitchfork pinned there).
 ## Rules
 
 - Commits follow Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`.
+- An implementation commit references the ticket it closes in the subject: `feat: book a free slot (#19)`.
 - Server code must use erasable TypeScript only (no enums, namespaces, parameter properties) and import local files with the `.ts` extension.
 - `mise run check` must pass before commit.
 
