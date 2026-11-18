@@ -1,24 +1,8 @@
 import { Alert, Button, Card, Group, Loader, Stack, Text, Title } from '@mantine/core'
-import { useEffect, useState } from 'react'
-import { type EventType, listEventTypes } from '../api'
-
-type State = { status: 'loading' } | { status: 'failed' } | { status: 'loaded'; eventTypes: EventType[] }
+import { useEventTypes } from '../useEventTypes.ts'
 
 export default function CatalogPage() {
-  const [state, setState] = useState<State>({ status: 'loading' })
-  const [attempt, setAttempt] = useState(0)
-
-  useEffect(() => {
-    listEventTypes({ throwOnError: true }).then(
-      ({ data }) => setState({ status: 'loaded', eventTypes: data }),
-      () => setState({ status: 'failed' }),
-    )
-  }, [attempt])
-
-  const retry = () => {
-    setState({ status: 'loading' })
-    setAttempt((n) => n + 1)
-  }
+  const { state, retry } = useEventTypes()
 
   return (
     <Stack>
