@@ -1,13 +1,13 @@
-# Pages are routed with react-router
+# Страницы маршрутизируются через react-router
 
-The app has several pages (home, event type catalog, slot selection, owner views) that guests should be able to open and share by URL. We use `react-router` in declarative mode with `BrowserRouter`.
+В приложении несколько страниц: главная, каталог типов встреч, выбор слота, страницы владельца. Гость должен открывать их по ссылке и делиться ими. Используем `react-router` в декларативном режиме с `BrowserRouter`.
 
-## Considered Options
+## Рассмотренные варианты
 
-- **Switching views with React state**: no URLs, no shareable links, no browser back button.
-- **Hand-written router**: reinvents path matching and links for no gain.
-- **TanStack Router**: type-safe routes, but more setup (route tree, code generation) than a handful of simple pages needs.
+- **Переключение страниц через состояние React**: у страниц нет URL, ссылкой не поделиться, кнопка «Назад» в браузере не работает.
+- **Самописный роутер**: заново пишем сопоставление путей и ссылки без какой-либо выгоды.
+- **TanStack Router**: типобезопасные маршруты, но настройки (дерево маршрутов, генерация кода) больше, чем нужно для нескольких простых страниц.
 
-## Consequences
+## Последствия
 
-Every page has its own path, so the production server must return `index.html` for unknown non-API paths (SPA fallback).
+У каждой страницы свой путь, поэтому сервер в продакшене должен отдавать `index.html` на любые пути, кроме API (SPA fallback).
