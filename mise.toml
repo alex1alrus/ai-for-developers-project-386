@@ -25,25 +25,49 @@ depends = ["deps"]
 description = "Start API (3000) and web (5173) daemons"
 run = "mise daemons start api web"
 
+[tasks.gen]
+depends = ["deps"]
+description = "Generate OpenAPI, frontend SDK and server types from spec/main.tsp"
+run = ["npx tsp compile spec/main.tsp", "npx openapi-ts"]
+
+# Fails when generated files differ from the contract, including new untracked files.
+# Only the worktree column of `git status --porcelain` counts, so staged files pass in pre-commit.
+[tasks."gen:check"]
+depends = ["gen"]
+description = "Fail if generated files are out of date"
+run = '''
+drift=$(git status --porcelain -- spec/generated src/api server/api | grep '^.[^ ]' || true)
+if [ -n "$drift" ]; then
+  echo "Generated files are out of date, run 'mise run gen' and commit:"
+  echo "$drift"
+  exit 1
+fi
+'''
+
+# wait_for: in `check`, read generated files only after gen:check has rewritten them.
 [tasks.lint]
 depends = ["deps"]
+wait_for = ["gen:check"]
 run = "npm run lint"
 
 [tasks.typecheck]
 depends = ["deps"]
+wait_for = ["gen:check"]
 run = "npm run typecheck"
 
 [tasks.test]
 depends = ["deps"]
+wait_for = ["gen:check"]
 run = "npm test"
 
 [tasks.build]
 depends = ["deps"]
+wait_for = ["gen:check"]
 run = "npm run build"
 
 [tasks.check]
 description = "All checks: local, git hooks and CI"
-depends = ["lint", "typecheck", "test", "build"]
+depends = ["gen:check", "lint", "typecheck", "test", "build"]
 
 [daemons.api]
 run = "exec npm run dev:server"
