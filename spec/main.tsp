@@ -116,6 +116,9 @@ interface EventTypes {
 @route("/api/bookings")
 @tag("Bookings")
 interface Bookings {
+  /** Upcoming bookings (`end > now`, ongoing included) of all event types sorted by start. */
+  @get @OpenAPI.operationId("listBookings") list(): Booking[];
+
   /** Books a free slot; no overlap with any booking of any event type. */
   @post
   @OpenAPI.operationId("createBooking")

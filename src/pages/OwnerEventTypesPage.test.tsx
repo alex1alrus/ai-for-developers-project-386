@@ -39,11 +39,11 @@ function fillForm() {
 
 const submit = () => fireEvent.click(screen.getByRole('button', { name: 'Создать' }))
 
-test('Владельцу link in the header opens the owner area on the event types tab', async () => {
+test('Типы встреч tab opens the event types page from the owner area', async () => {
   mockApi(() => [], () => Promise.reject(new Error('unexpected POST')))
-  renderAt('/', <App />)
+  renderAt('/owner', <App />)
 
-  fireEvent.click(screen.getByRole('link', { name: 'Владельцу' }))
+  fireEvent.click(screen.getByRole('tab', { name: 'Типы встреч' }))
 
   expect(screen.getByRole('tab', { name: 'Типы встреч', selected: true })).toBeTruthy()
   expect(await screen.findByText('Типов встреч пока нет. Создайте первый в форме ниже.')).toBeTruthy()

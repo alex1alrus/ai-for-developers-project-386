@@ -129,6 +129,9 @@ describe('POST /api/bookings', () => {
       .json()
       .map((slot: { start: string }) => slot.start)
 
+  const listBookings = async (app: ReturnType<typeof buildApp>) =>
+    (await app.inject({ method: 'GET', url: '/api/bookings' })).json()
+
   // Not returning the app: a Fastify instance is thenable, so an async function would await it.
   async function addTypes(app: ReturnType<typeof buildApp>) {
     await createEventType(app, intro)
@@ -161,6 +164,7 @@ describe('POST /api/bookings', () => {
 
     expect(res.statusCode).toBe(409)
     expect(res.json()).toMatchObject({ code: 'BOOKING_CONFLICT', message: expect.any(String) })
+    expect((await listBookings(app)).map((b: { guestName: string }) => b.guestName)).toEqual(['Анна'])
     await app.close()
   })
 
@@ -185,6 +189,9 @@ describe('POST /api/bookings', () => {
     ])
 
     expect(responses.map((res) => res.statusCode).toSorted()).toEqual([201, 409])
+    const stored = await listBookings(app)
+    expect(stored).toHaveLength(1)
+    expect(stored[0]).toEqual(responses.find((res) => res.statusCode === 201)?.json())
     const introStarts = await slotStarts(app, 'intro')
     const freeEdges = ['2026-11-18T10:00:00.000Z', '2026-11-18T11:00:00.000Z'].filter((s) => introStarts.includes(s))
     expect(freeEdges).toHaveLength(1) // one booking stored: two would block both edges
@@ -260,6 +267,38 @@ describe('POST /api/bookings', () => {
 
     expect(res.statusCode).toBe(404)
     expect(res.json()).toMatchObject({ code: 'EVENT_TYPE_NOT_FOUND', message: expect.any(String) })
+    await app.close()
+  })
+  test('GET /api/bookings lists upcoming bookings sorted by start: ended hidden, ongoing shown', async () => {
+    const app = buildApp()
+    await addTypes(app)
+    await book(app, 'intro', '2026-11-18T12:00:00.000Z', { guestName: 'Вера' })
+    await book(app, 'hour', '2026-11-18T10:00:00.000Z', { guestName: 'Глеб' })
+    await book(app, 'intro', '2026-11-18T09:30:00.000Z', { guestName: 'Борис' })
+    await book(app, 'intro', '2026-11-18T09:00:00.000Z')
+    vi.setSystemTime(new Date('2026-11-18T10:15:00.000Z'))
+
+    const res = await app.inject({ method: 'GET', url: '/api/bookings' })
+
+    expect(res.statusCode).toBe(200)
+    // 09:00-09:30 and 09:30-10:00 have ended; 10:00-11:00 is ongoing.
+    expect(res.json().map((b: { start: string; guestName: string }) => [b.start, b.guestName])).toEqual([
+      ['2026-11-18T10:00:00.000Z', 'Глеб'],
+      ['2026-11-18T12:00:00.000Z', 'Вера'],
+    ])
+    await app.close()
+  })
+
+  test('GET /api/bookings hides a booking the moment it ends', async () => {
+    const app = buildApp()
+    await addTypes(app)
+    await book(app, 'intro', '2026-11-18T09:00:00.000Z')
+    vi.setSystemTime(new Date('2026-11-18T09:29:59.999Z'))
+    expect(await listBookings(app)).toHaveLength(1)
+
+    vi.setSystemTime(new Date('2026-11-18T09:30:00.000Z'))
+
+    expect(await listBookings(app)).toEqual([])
     await app.close()
   })
 })

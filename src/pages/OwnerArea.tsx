@@ -11,10 +11,7 @@ export default function OwnerArea() {
       <Title>Раздел владельца</Title>
       <Tabs value={tab} onChange={(value) => navigate(`/owner/${value}`)}>
         <Tabs.List>
-          {/* ponytail: disabled until the bookings tab ticket adds /owner/bookings. */}
-          <Tabs.Tab value="bookings" disabled>
-            Записи
-          </Tabs.Tab>
+          <Tabs.Tab value="bookings">Записи</Tabs.Tab>
           <Tabs.Tab value="event-types">Типы встреч</Tabs.Tab>
         </Tabs.List>
       </Tabs>
