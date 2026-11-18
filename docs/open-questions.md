@@ -1,8 +1,8 @@
-# Open questions for the next map
+# Открытые вопросы для карты следующего шага
 
-Raised while designing the home page, deliberately not decided yet.
+Возникли при проектировании главной страницы, намеренно пока не решены.
 
-- Owner entry point: where the owner reaches their pages (header link, separate path) without authentication.
-- Production serving: one Fastify process serving the API and the built frontend, or separate services; SPA fallback follows from ADR-0001.
-- Browser end-to-end tests (Playwright) for the booking scenario.
-- Guest pages after the event type catalog (`/book`): slot selection and booking form, and their paths.
+- Вход владельца: как владелец попадает на свои страницы без авторизации (ссылка в шапке, отдельный путь).
+- Раздача в продакшене: один процесс Fastify отдаёт и API, и собранный фронтенд, или это отдельные сервисы. SPA fallback следует из ADR-0001.
+- Браузерные e2e-тесты (Playwright) для сценария записи.
+- Страницы гостя после каталога типов встреч (`/book`): выбор слота и форма записи, их пути.
