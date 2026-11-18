@@ -1,4 +1,4 @@
-import Fastify, { type FastifyError } from 'fastify'
+import Fastify, { type FastifyError, type FastifyReply } from 'fastify'
 import glue from 'fastify-openapi-glue'
 import fastifyStatic from '@fastify/static'
 import { join } from 'node:path'
@@ -15,6 +15,13 @@ export function buildApp({ webRoot = join(import.meta.dirname, '../dist') } = {}
   const eventTypes: EventType[] = []
   const bookings: Booking[] = []
 
+  /** The event type with `id`, or `undefined` after answering 404 EVENT_TYPE_NOT_FOUND. */
+  function findEventType(id: string, reply: FastifyReply) {
+    const eventType = eventTypes.find((eventType) => eventType.id === id)
+    if (!eventType) reply.code(404).send({ code: 'EVENT_TYPE_NOT_FOUND', message: `Event type "${id}" not found` })
+    return eventType
+  }
+
   const serviceHandlers: RouteHandlers = {
     listEventTypes(_req, reply) {
       reply.code(200).send(eventTypes.toSorted((a, b) => a.title.localeCompare(b.title)))
@@ -29,11 +36,8 @@ export function buildApp({ webRoot = join(import.meta.dirname, '../dist') } = {}
       reply.code(201).send(req.body)
     },
     listSlots(req, reply) {
-      const eventType = eventTypes.find((eventType) => eventType.id === req.params.id)
-      if (!eventType) {
-        reply.code(404).send({ code: 'EVENT_TYPE_NOT_FOUND', message: `Event type "${req.params.id}" not found` })
-        return
-      }
+      const eventType = findEventType(req.params.id, reply)
+      if (!eventType) return
       reply.code(200).send(freeSlots(eventType.durationMinutes, bookings, new Date()))
     },
     listBookings(_req, reply) {
@@ -43,11 +47,8 @@ export function buildApp({ webRoot = join(import.meta.dirname, '../dist') } = {}
     // Synchronous: no await between the conflict check and the push, so concurrent requests cannot both pass.
     createBooking(req, reply) {
       const { eventTypeId, start } = req.body
-      const eventType = eventTypes.find((eventType) => eventType.id === eventTypeId)
-      if (!eventType) {
-        reply.code(404).send({ code: 'EVENT_TYPE_NOT_FOUND', message: `Event type "${eventTypeId}" not found` })
-        return
-      }
+      const eventType = findEventType(eventTypeId, reply)
+      if (!eventType) return
       const now = new Date()
       const startIso = new Date(start).toISOString()
       const slot = freeSlots(eventType.durationMinutes, [], now).find((slot) => slot.start === startIso)
