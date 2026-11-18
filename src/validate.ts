@@ -2,7 +2,7 @@
 type StringSchema = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string }
 
 /** Checks a form value against its contract schema; returns the message to show at the field. */
-export function stringError(schema: StringSchema, value: string, patternMessage = 'Недопустимый формат') {
+export function stringError(schema: StringSchema, value: string, patternMessage?: string) {
   if (schema.minLength !== undefined && value.length < schema.minLength)
     return value === '' ? 'Заполните поле' : `Не меньше ${schema.minLength} символов`
   if (schema.maxLength !== undefined && value.length > schema.maxLength) return `Не больше ${schema.maxLength} символов`
