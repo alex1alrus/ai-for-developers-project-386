@@ -16,7 +16,7 @@ test('30-minute slots run every 30 minutes from 09:00 to 17:30 UTC', () => {
   })
 })
 
-test('a 540-minute meeting has a single start at 09:00 each day', () => {
+test('a 540-minute event type has a single slot at 09:00 each day', () => {
   const slots = freeSlots(540, [], now)
 
   expect(slots.filter((slot) => slot.start.startsWith('2026-11-18'))).toEqual([
@@ -24,7 +24,7 @@ test('a 540-minute meeting has a single start at 09:00 each day', () => {
   ])
 })
 
-test('a meeting ends no later than 18:00: the last 45-minute start is 17:00', () => {
+test('a slot ends no later than 18:00: the last slot of a 45-minute event type starts at 17:00', () => {
   const today = starts(45).filter((start) => start.startsWith('2026-11-18'))
 
   expect(today.at(-1)).toBe('2026-11-18T17:00:00.000Z')
