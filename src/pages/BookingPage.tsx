@@ -1,13 +1,21 @@
-import { Alert, Anchor, Button, Group, Loader, Stack, Text, Title } from '@mantine/core'
-import { type ReactNode, useEffect, useState } from 'react'
+import { Alert, Anchor, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core'
+import { type ChangeEvent, type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { type ApiError, type EventType, listEventTypes, listSlots, type Slot } from '../api'
+import { type ApiError, type Booking, createBooking, type EventType, listEventTypes, listSlots, type Slot } from '../api'
+import { BookingRequestSchema } from '../api/schemas.gen.ts'
+import { stringError } from '../validate.ts'
 
 type State =
   | { status: 'loading' }
   | { status: 'failed' }
   | { status: 'notFound' }
   | { status: 'loaded'; eventType: EventType; slots: Slot[]; dates: string[] }
+
+const schema = BookingRequestSchema.properties
+const emptyForm = { guestName: '', guestEmail: '' }
+type Form = typeof emptyForm
+type Errors = Partial<Record<keyof Form, string>>
+type Submit = { kind: 'idle' } | { kind: 'submitting' } | { kind: 'failed'; message: string }
 
 const DAY = 24 * 60 * 60_000
 
@@ -32,9 +40,9 @@ const dayLabel = new Intl.DateTimeFormat('ru', { weekday: 'short', day: 'numeric
 const longDay = new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'long' })
 const time = new Intl.DateTimeFormat('ru', { hour: '2-digit', minute: '2-digit' })
 
-const page = (children: ReactNode) => (
+const page = (children: ReactNode, heading = 'Выберите время') => (
   <Stack>
-    <Title>Выберите время</Title>
+    <Title>{heading}</Title>
     {children}
   </Stack>
 )
@@ -52,6 +60,11 @@ export default function BookingPage() {
   const [state, setState] = useState<State>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
   const [searchParams, setSearchParams] = useSearchParams()
+  const [picked, setPicked] = useState<Slot>()
+  const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState<Errors>({})
+  const [submitState, setSubmit] = useState<Submit>({ kind: 'idle' })
+  const [booked, setBooked] = useState<Booking>()
 
   useEffect(() => {
     Promise.all([
@@ -107,7 +120,66 @@ export default function BookingPage() {
     )
   }
 
+  if (booked) {
+    const start = new Date(booked.start)
+    return page(
+      <Stack align="start" gap="xs">
+        <Text>{state.eventType.title}</Text>
+        <Text>
+          {longDay.format(start)}, {time.format(start)}
+        </Text>
+        <Text>{booked.guestName}</Text>
+        <Text>{booked.guestEmail}</Text>
+        <CatalogLink />
+      </Stack>,
+      'Вы записаны',
+    )
+  }
+
   const nearest = freeDates.find((date) => date > selected) ?? freeDates.at(-1)
+
+  const send = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!picked) return
+    const body = {
+      eventTypeId,
+      start: picked.start,
+      guestName: form.guestName.trim(),
+      guestEmail: form.guestEmail.trim(),
+    }
+    const found: Errors = {
+      guestName: stringError(schema.guestName, body.guestName, 'Без переносов строки'),
+      guestEmail: stringError(schema.guestEmail, body.guestEmail, 'Введите email вида name@example.com'),
+    }
+    setErrors(found)
+    if (Object.values(found).some(Boolean)) return
+
+    setSubmit({ kind: 'submitting' })
+    try {
+      const { data } = await createBooking({ body, throwOnError: true })
+      setBooked(data)
+    } catch (error) {
+      const code = (error as Partial<ApiError> | undefined)?.code
+      if (code === 'EVENT_TYPE_NOT_FOUND') {
+        setState({ status: 'notFound' })
+      } else if (code === 'BOOKING_CONFLICT' || code === 'INVALID_START') {
+        setPicked(undefined)
+        setSubmit({ kind: 'failed', message: 'Это время уже недоступно. Выберите другое.' })
+        setAttempt((n) => n + 1) // fresh slots without the loader; ?date= stays
+      } else {
+        const message =
+          code === 'VALIDATION_ERROR' ? 'Проверьте поля и попробуйте ещё раз' : 'Не удалось отправить. Попробуйте ещё раз.'
+        setSubmit({ kind: 'failed', message })
+      }
+    }
+  }
+
+  const change = (key: keyof Form) => (event: ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [key]: event.currentTarget.value })
+    setErrors({ ...errors, [key]: undefined })
+  }
+
+  const alert = submitState.kind === 'failed' && <Alert color="red" title={submitState.message} />
 
   return page(
     <>
@@ -135,10 +207,19 @@ export default function BookingPage() {
               </Button>
             ))}
           </Group>
+          {!picked && alert}
           {byDate.has(selected) ? (
             <Group gap="xs">
               {byDate.get(selected)!.map((slot) => (
-                <Button key={slot.start} variant="light">
+                <Button
+                  key={slot.start}
+                  variant={slot.start === picked?.start ? 'filled' : 'light'}
+                  aria-pressed={slot.start === picked?.start}
+                  onClick={() => {
+                    setPicked(slot)
+                    setSubmit({ kind: 'idle' })
+                  }}
+                >
                   {time.format(new Date(slot.start))}
                 </Button>
               ))}
@@ -152,6 +233,24 @@ export default function BookingPage() {
                 </Button>
               )}
             </Stack>
+          )}
+          {picked && (
+            <form onSubmit={send} noValidate>
+              <Stack>
+                {alert}
+                <TextInput label="Имя" value={form.guestName} onChange={change('guestName')} error={errors.guestName} />
+                <TextInput
+                  label="Email"
+                  type="email"
+                  value={form.guestEmail}
+                  onChange={change('guestEmail')}
+                  error={errors.guestEmail}
+                />
+                <Button type="submit" disabled={submitState.kind === 'submitting'}>
+                  Записаться
+                </Button>
+              </Stack>
+            </form>
           )}
         </>
       )}

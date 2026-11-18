@@ -35,6 +35,33 @@ model Slot {
   end: utcDateTime;
 }
 
+/** What a guest sends to book a slot. */
+model BookingRequest {
+  eventTypeId: string;
+
+  /** Must be a start of a slot of the event type. */
+  start: utcDateTime;
+
+  /** No surrounding whitespace, no line breaks. */
+  @pattern("^\\S(.*\\S)?$")
+  @minLength(1)
+  @maxLength(100)
+  guestName: string;
+
+  @pattern("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+  @maxLength(254)
+  guestEmail: string;
+}
+
+/** An interval `[start, end)` a guest took for an event type. */
+model Booking {
+  @format("uuid") id: string;
+  ...BookingRequest;
+
+  /** `start` plus the event type's duration. */
+  end: utcDateTime;
+}
+
 union ApiErrorCode {
   "VALIDATION_ERROR",
   "INVALID_START",
@@ -82,6 +109,31 @@ interface EventTypes {
     | Slot[]
     | {
         @statusCode statusCode: 404;
+        @body body: ApiError;
+      };
+}
+
+@route("/api/bookings")
+@tag("Bookings")
+interface Bookings {
+  /** Books a free slot; no overlap with any booking of any event type. */
+  @post
+  @OpenAPI.operationId("createBooking")
+  create(@body booking: BookingRequest):
+    | {
+        @statusCode statusCode: 201;
+        @body body: Booking;
+      }
+    | {
+        @statusCode statusCode: 400;
+        @body body: ApiError;
+      }
+    | {
+        @statusCode statusCode: 404;
+        @body body: ApiError;
+      }
+    | {
+        @statusCode statusCode: 409;
         @body body: ApiError;
       };
 }
