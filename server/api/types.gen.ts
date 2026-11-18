@@ -48,3 +48,32 @@ export type ListEventTypesResponses = {
 };
 
 export type ListEventTypesResponse = ListEventTypesResponses[keyof ListEventTypesResponses];
+
+export type CreateEventTypeData = {
+  body: EventType;
+  path?: never;
+  query?: never;
+  url: '/api/event-types';
+};
+
+export type CreateEventTypeErrors = {
+  /**
+   * The server could not understand the request due to invalid syntax.
+   */
+  400: ApiError;
+  /**
+   * The request conflicts with the current state of the server.
+   */
+  409: ApiError;
+};
+
+export type CreateEventTypeError = CreateEventTypeErrors[keyof CreateEventTypeErrors];
+
+export type CreateEventTypeResponses = {
+  /**
+   * The request has succeeded and a new resource has been created as a result.
+   */
+  201: EventType;
+};
+
+export type CreateEventTypeResponse = CreateEventTypeResponses[keyof CreateEventTypeResponses];

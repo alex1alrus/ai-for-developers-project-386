@@ -2,10 +2,14 @@
 
 import type { RouteHandler } from 'fastify';
 
-import type { ListEventTypesResponses } from './types.gen.ts';
+import type { CreateEventTypeData, CreateEventTypeErrors, CreateEventTypeResponses, ListEventTypesResponses } from './types.gen.ts';
 
 export type RouteHandlers = {
   listEventTypes: RouteHandler<{
     Reply: ListEventTypesResponses;
+  }>;
+  createEventType: RouteHandler<{
+    Body: CreateEventTypeData['body'];
+    Reply: CreateEventTypeErrors & CreateEventTypeResponses;
   }>;
 };

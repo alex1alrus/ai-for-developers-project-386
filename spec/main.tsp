@@ -50,4 +50,21 @@ model ApiError {
 interface EventTypes {
   /** All event types sorted by title. */
   @get @OpenAPI.operationId("listEventTypes") list(): EventType[];
+
+  /** Creates an event type; `id` must be unused. */
+  @post
+  @OpenAPI.operationId("createEventType")
+  create(@body eventType: EventType):
+    | {
+        @statusCode statusCode: 201;
+        @body body: EventType;
+      }
+    | {
+        @statusCode statusCode: 400;
+        @body body: ApiError;
+      }
+    | {
+        @statusCode statusCode: 409;
+        @body body: ApiError;
+      };
 }
