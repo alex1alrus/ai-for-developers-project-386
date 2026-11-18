@@ -11,14 +11,26 @@ Tools and tasks live in `mise.toml` (Node, hk, pitchfork pinned there).
 - `mise run lint` — oxlint.
 - `mise run typecheck` — `tsc -b` for web and server.
 - `mise run test` — Vitest. Single test: `npx vitest run server/app.test.ts -t "<name>"`.
-- `mise run check` — lint, typecheck, test and build; the same command runs in the pre-commit hook (hk) and GitHub Actions.
+- `mise run gen` — generate OpenAPI, frontend SDK and server types from the TypeSpec contract.
+- `mise run check` — `gen:check` (regenerate, fail if any generated file changed or appeared), then lint, typecheck, test and build; the same command runs in the pre-commit hook (hk) and GitHub Actions.
 - `mise run build` — production build of the frontend into `dist/`.
 
 ## Structure
 
-- `src/` — React + Mantine frontend (Vite).
-- `server/` — Fastify API, run by Node directly (type stripping, no build step). `app.ts` builds the app, `index.ts` listens on `PORT`.
+- `spec/main.tsp` — TypeSpec API contract, the single source of truth for the API.
+- `src/` — React + Mantine frontend (Vite). It calls the API only through the generated SDK in `src/api`.
+- `server/` — Fastify API, run by Node directly (type stripping, no build step). `app.ts` builds the app, `index.ts` listens on `PORT`. Routes and request validation come from the OpenAPI file via `fastify-openapi-glue`; handlers are typed by `RouteHandlers` from `server/api`.
 - `server/*.test.ts` — Vitest tests via `app.inject`.
+
+## Contract and generated code
+
+Generated paths, never edit them by hand:
+
+- `spec/generated/` — OpenAPI 3.1 (`tsp compile`, config in `tspconfig.yaml`).
+- `src/api/` — frontend types, SDK, fetch client and JSON schemas (`openapi-ts`, config in `openapi-ts.config.ts`).
+- `server/api/` — server types and Fastify `RouteHandlers`.
+
+To change the API: edit `spec/main.tsp`, run `mise run gen`, then update the code of both sides (server handlers, frontend calls) and commit the generated files with them.
 
 ## Rules
 

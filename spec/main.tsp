@@ -1,0 +1,53 @@
+import "@typespec/http";
+import "@typespec/openapi";
+
+using Http;
+
+@service(#{ title: "Call booking API" })
+namespace CallBooking;
+
+/** A call format the owner offers. */
+model EventType {
+  /** Short identifier set by the owner, used in URLs. */
+  @pattern("^[a-z0-9]+(-[a-z0-9]+)*$")
+  @maxLength(64)
+  id: string;
+
+  /** No surrounding whitespace, no line breaks. */
+  @pattern("^\\S(.*\\S)?$")
+  @minLength(1)
+  @maxLength(100)
+  title: string;
+
+  @maxLength(500)
+  description: string;
+
+  /** Multiple of 15, from 15 to 540. */
+  @minValue(15)
+  @maxValue(540)
+  @OpenAPI.extension("multipleOf", 15)
+  durationMinutes: int32;
+}
+
+union ApiErrorCode {
+  "VALIDATION_ERROR",
+  "INVALID_START",
+  "EVENT_TYPE_NOT_FOUND",
+  "EVENT_TYPE_EXISTS",
+  "BOOKING_CONFLICT",
+}
+
+@error
+model ApiError {
+  code: ApiErrorCode;
+
+  /** English text for developers; the UI builds user text from `code`. */
+  message: string;
+}
+
+@route("/api/event-types")
+@tag("EventTypes")
+interface EventTypes {
+  /** All event types sorted by title. */
+  @get @OpenAPI.operationId("listEventTypes") list(): EventType[];
+}
