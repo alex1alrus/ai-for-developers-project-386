@@ -1,8 +1,10 @@
-import { Alert, Button, Card, Loader, NativeSelect, Stack, Text, Textarea, TextInput, Title } from '@mantine/core'
+import { Alert, Button, Card, NativeSelect, Stack, Text, Textarea, TextInput, Title } from '@mantine/core'
 import { type ChangeEvent, type FormEvent, useState } from 'react'
-import { type ApiError, createEventType } from '../api'
+import { createEventType, listEventTypes } from '../api'
+import { errorCode, submitFailureMessage } from '../apiError.ts'
 import { EventTypeSchema } from '../api/schemas.gen.ts'
-import { useEventTypes } from '../useEventTypes.ts'
+import { LoadFallback } from '../LoadFallback.tsx'
+import { useLoad } from '../useLoad.ts'
 import { stringError } from '../validate.ts'
 
 const schema = EventTypeSchema.properties
@@ -15,18 +17,20 @@ const durationOptions = Array.from(
 const emptyForm = { id: '', title: '', description: '', durationMinutes: durationOptions[0] }
 type Form = typeof emptyForm
 type Errors = Partial<Record<keyof Form, string>>
-type Status = { kind: 'idle' } | { kind: 'submitting' } | { kind: 'created' } | { kind: 'failed'; message: string }
+type Submission = { kind: 'idle' } | { kind: 'submitting' } | { kind: 'created' } | { kind: 'failed'; message: string }
+
+const loadEventTypes = async () => (await listEventTypes({ throwOnError: true })).data
 
 export default function OwnerEventTypesPage() {
-  const { state, retry, reload } = useEventTypes()
+  const { state, retry, reload } = useLoad(loadEventTypes)
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState<Errors>({})
-  const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  const [submission, setSubmission] = useState<Submission>({ kind: 'idle' })
 
   const change = (key: keyof Form) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [key]: event.currentTarget.value })
     setErrors({ ...errors, [key]: undefined })
-    if (status.kind !== 'submitting') setStatus({ kind: 'idle' })
+    if (submission.kind !== 'submitting') setSubmission({ kind: 'idle' })
   }
 
   const submit = async (event: FormEvent) => {
@@ -40,39 +44,30 @@ export default function OwnerEventTypesPage() {
     setErrors(found)
     if (Object.values(found).some(Boolean)) return
 
-    setStatus({ kind: 'submitting' })
+    setSubmission({ kind: 'submitting' })
     try {
       await createEventType({ body, throwOnError: true })
       setForm(emptyForm)
-      setStatus({ kind: 'created' })
+      setSubmission({ kind: 'created' })
       reload()
     } catch (error) {
-      const code = (error as Partial<ApiError> | undefined)?.code
-      if (code === 'EVENT_TYPE_EXISTS') {
+      if (errorCode(error) === 'EVENT_TYPE_EXISTS') {
         setErrors({ id: 'Тип встречи с таким идентификатором уже есть' })
-        setStatus({ kind: 'idle' })
+        setSubmission({ kind: 'idle' })
       } else {
-        const message =
-          code === 'VALIDATION_ERROR' ? 'Проверьте поля и попробуйте ещё раз' : 'Не удалось отправить. Попробуйте ещё раз.'
-        setStatus({ kind: 'failed', message })
+        setSubmission({ kind: 'failed', message: submitFailureMessage(error) })
       }
     }
   }
 
   return (
     <Stack>
-      {state.status === 'loading' ? (
-        <Loader role="status" aria-label="Загрузка" />
-      ) : state.status === 'failed' ? (
-        <Alert color="red" title="Не удалось загрузить данные">
-          <Button variant="light" color="red" onClick={retry}>
-            Повторить
-          </Button>
-        </Alert>
-      ) : state.eventTypes.length === 0 ? (
+      {state.status !== 'loaded' ? (
+        <LoadFallback failed={state.status === 'failed'} onRetry={retry} />
+      ) : state.data.length === 0 ? (
         <Text c="dimmed">Типов встреч пока нет. Создайте первый в форме ниже.</Text>
       ) : (
-        state.eventTypes.map((eventType) => (
+        state.data.map((eventType) => (
           <Card key={eventType.id} withBorder>
             <Text fw={600}>{eventType.title}</Text>
             <Text c="dimmed">
@@ -83,8 +78,8 @@ export default function OwnerEventTypesPage() {
       )}
 
       <Title order={2}>Новый тип встречи</Title>
-      {status.kind === 'created' && <Alert color="green" title="Тип встречи создан" />}
-      {status.kind === 'failed' && <Alert color="red" title={status.message} />}
+      {submission.kind === 'created' && <Alert color="green" title="Тип встречи создан" />}
+      {submission.kind === 'failed' && <Alert color="red" title={submission.message} />}
       <form onSubmit={submit} noValidate>
         <Stack>
           <TextInput label="Идентификатор" description="Часть ссылки: /book/<идентификатор>" value={form.id} onChange={change('id')} error={errors.id} />
@@ -96,7 +91,7 @@ export default function OwnerEventTypesPage() {
             value={form.durationMinutes}
             onChange={change('durationMinutes')}
           />
-          <Button type="submit" disabled={status.kind === 'submitting'}>
+          <Button type="submit" disabled={submission.kind === 'submitting'}>
             Создать
           </Button>
         </Stack>
