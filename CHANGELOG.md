@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/alex1alrus/ai-for-developers-project-386/compare/v1.0.0...v1.1.0) (2026-11-18)
+
+
+### Features
+
+* deploy with Docker on Render ([957c611](https://github.com/alex1alrus/ai-for-developers-project-386/commit/957c611e753a047b69d58ea02ffb3c3f283cb2c9))
+
 ## 1.0.0 (2026-11-18)
 
 
