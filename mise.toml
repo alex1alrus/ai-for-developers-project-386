@@ -16,9 +16,9 @@ sources = ["package-lock.json"]
 outputs = ["node_modules/.package-lock.json"]
 
 [tasks.setup]
-description = "Install npm dependencies and git hooks"
+description = "Install npm dependencies, Chromium for Playwright and git hooks"
 depends = ["deps"]
-run = "hk install --mise"
+run = ["npx playwright install chromium", "hk install --mise"]
 
 [tasks.dev]
 depends = ["deps"]
@@ -65,9 +65,16 @@ depends = ["deps"]
 wait_for = ["gen:check"]
 run = "npm run build"
 
+# The Playwright webServer builds `dist/` itself; wait for `build` so the two builds do not write it at once.
+[tasks.e2e]
+depends = ["deps"]
+wait_for = ["gen:check", "build"]
+description = "Browser scenario in Chromium against the production server on port 3100"
+run = "npx playwright test"
+
 [tasks.check]
 description = "All checks: local, git hooks and CI"
-depends = ["gen:check", "lint", "typecheck", "test", "build"]
+depends = ["gen:check", "lint", "typecheck", "test", "build", "e2e"]
 
 [daemons.api]
 run = "exec npm run dev:server"

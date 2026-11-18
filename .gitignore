@@ -26,3 +26,7 @@ dist-ssr
 .env
 coverage
 .claude/worktrees
+
+# Playwright
+test-results
+playwright-report

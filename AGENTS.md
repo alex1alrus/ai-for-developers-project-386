@@ -6,21 +6,23 @@ Call booking service (Cal.com-like): one owner, guests book free slots. Scenario
 
 Tools and tasks live in `mise.toml` (Node, hk, pitchfork pinned there).
 
-- `mise install` — install tools, npm deps and git hooks (postinstall runs `mise run setup`).
+- `mise install` — install tools, npm deps, Chromium for Playwright and git hooks (postinstall runs `mise run setup`).
 - `mise run dev` — start daemons: API on `127.0.0.1:3000`, Vite on `127.0.0.1:5173` (proxies `/api`). `mise daemons status|logs|stop` to manage.
 - `mise run lint` — oxlint.
 - `mise run typecheck` — `tsc -b` for web and server.
 - `mise run test` — Vitest. Single test: `npx vitest run server/app.test.ts -t "<name>"`.
 - `mise run gen` — generate OpenAPI, frontend SDK and server types from the TypeSpec contract.
-- `mise run check` — `gen:check` (regenerate, fail if any generated file changed or appeared), then lint, typecheck, test and build; the same command runs in the pre-commit hook (hk) and GitHub Actions.
+- `mise run e2e` — Playwright scenario from `README.md` in Chromium (`e2e/*.e2e.ts`, config `playwright.config.ts`). Its `webServer` runs `npm run build && npm start` on port 3100, real time, no API mocks. Part of `check`.
+- `mise run check` — `gen:check` (regenerate, fail if any generated file changed or appeared), then lint, typecheck, test, build and e2e; the same command runs in the pre-commit hook (hk) and GitHub Actions.
 - `mise run build` — production build of the frontend into `dist/`.
 
 ## Structure
 
 - `spec/main.tsp` — TypeSpec API contract, the single source of truth for the API.
 - `src/` — React + Mantine frontend (Vite). It calls the API only through the generated SDK in `src/api`.
-- `server/` — Fastify API, run by Node directly (type stripping, no build step). `app.ts` builds the app, `index.ts` listens on `PORT`. Routes and request validation come from the OpenAPI file via `fastify-openapi-glue`; handlers are typed by `RouteHandlers` from `server/api`.
+- `server/` — Fastify API, run by Node directly (type stripping, no build step). `app.ts` builds the app, `index.ts` listens on `PORT`. `npm start` also serves the built `dist/` via `@fastify/static`, with SPA fallback (ADR-0001): `index.html` for any other `GET` outside `/api`, 404 `ApiError` `NOT_FOUND` otherwise. Routes and request validation come from the OpenAPI file via `fastify-openapi-glue`; handlers are typed by `RouteHandlers` from `server/api`.
 - `server/*.test.ts` — Vitest tests via `app.inject`.
+- `e2e/*.e2e.ts` — Playwright browser scenario. The `.e2e.ts` suffix keeps Vitest from picking it up; Playwright only looks in `e2e/`.
 
 ## Contract and generated code
 

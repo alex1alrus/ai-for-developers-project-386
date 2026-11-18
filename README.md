@@ -66,7 +66,7 @@
 
 - TypeScript, React, Mantine, Vite — фронтенд;
 - Fastify на Node.js 24 — бекенд;
-- Vitest, oxlint, `tsc`;
+- Vitest, Playwright (Chromium), oxlint, `tsc`;
 - mise (версии инструментов и задачи), hk (git-хуки), pitchfork (фоновые серверы);
 - GitHub Actions.
 
@@ -81,14 +81,15 @@ mise trust
 mise install
 ```
 
-`mise install` ставит Node.js, hk и pitchfork из `mise.toml`, npm-зависимости и pre-commit хук.
+`mise install` ставит Node.js, hk и pitchfork из `mise.toml`, npm-зависимости, Chromium для Playwright и pre-commit хук.
 
 ## Использование
 
 ```bash
 mise run dev      # API на http://127.0.0.1:3000, интерфейс на http://127.0.0.1:5173
 mise daemons stop # остановить серверы
-mise run check    # линтер, проверка типов и тесты
+mise run check    # линтер, проверка типов, тесты, сборка и браузерный сценарий
+mise run e2e      # только браузерный сценарий: сборка и сервер на http://127.0.0.1:3100
 ```
 
 ---
