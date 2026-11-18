@@ -2,14 +2,16 @@ import Fastify, { type FastifyError } from 'fastify'
 import glue from 'fastify-openapi-glue'
 import { join } from 'node:path'
 import type { RouteHandlers } from './api/fastify.gen.ts'
-import type { EventType } from './api/types.gen.ts'
+import type { Booking, EventType } from './api/types.gen.ts'
 import { freeSlots } from './slots.ts'
+import { randomUUID } from 'node:crypto'
 
 const specification = join(import.meta.dirname, '../spec/generated/openapi.yaml')
 
 export function buildApp() {
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' })
   const eventTypes: EventType[] = []
+  const bookings: Booking[] = []
 
   const serviceHandlers: RouteHandlers = {
     listEventTypes(_req, reply) {
@@ -30,7 +32,31 @@ export function buildApp() {
         reply.code(404).send({ code: 'EVENT_TYPE_NOT_FOUND', message: `Event type "${req.params.id}" not found` })
         return
       }
-      reply.code(200).send(freeSlots(eventType.durationMinutes, [], new Date()))
+      reply.code(200).send(freeSlots(eventType.durationMinutes, bookings, new Date()))
+    },
+    // Synchronous: no await between the conflict check and the push, so concurrent requests cannot both pass.
+    createBooking(req, reply) {
+      const { eventTypeId, start } = req.body
+      const eventType = eventTypes.find((eventType) => eventType.id === eventTypeId)
+      if (!eventType) {
+        reply.code(404).send({ code: 'EVENT_TYPE_NOT_FOUND', message: `Event type "${eventTypeId}" not found` })
+        return
+      }
+      const now = new Date()
+      const startIso = new Date(start).toISOString()
+      const slot = freeSlots(eventType.durationMinutes, [], now).find((slot) => slot.start === startIso)
+      if (!slot) {
+        reply.code(400).send({ code: 'INVALID_START', message: `${start} is not a slot start of "${eventTypeId}"` })
+        return
+      }
+      // The overlap rule itself lives in `freeSlots`: a slot that overlaps any booking is not free.
+      if (!freeSlots(eventType.durationMinutes, bookings, now).some((free) => free.start === slot.start)) {
+        reply.code(409).send({ code: 'BOOKING_CONFLICT', message: `${start} overlaps an existing booking` })
+        return
+      }
+      const booking: Booking = { ...req.body, id: randomUUID(), start: slot.start, end: slot.end }
+      bookings.push(booking)
+      reply.code(201).send(booking)
     },
   }
 

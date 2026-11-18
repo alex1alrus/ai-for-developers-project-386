@@ -15,6 +15,43 @@ export type ApiError = {
 export type ApiErrorCode = 'VALIDATION_ERROR' | 'INVALID_START' | 'EVENT_TYPE_NOT_FOUND' | 'EVENT_TYPE_EXISTS' | 'BOOKING_CONFLICT';
 
 /**
+ * An interval `[start, end)` a guest took for an event type.
+ */
+export type Booking = {
+  id: string;
+  eventTypeId: string;
+  /**
+   * Must be a start of a slot of the event type.
+   */
+  start: string;
+  /**
+   * No surrounding whitespace, no line breaks.
+   */
+  guestName: string;
+  guestEmail: string;
+  /**
+   * `start` plus the event type's duration.
+   */
+  end: string;
+};
+
+/**
+ * What a guest sends to book a slot.
+ */
+export type BookingRequest = {
+  eventTypeId: string;
+  /**
+   * Must be a start of a slot of the event type.
+   */
+  start: string;
+  /**
+   * No surrounding whitespace, no line breaks.
+   */
+  guestName: string;
+  guestEmail: string;
+};
+
+/**
  * A call format the owner offers.
  */
 export type EventType = {
@@ -40,6 +77,39 @@ export type Slot = {
   start: string;
   end: string;
 };
+
+export type CreateBookingData = {
+  body: BookingRequest;
+  path?: never;
+  query?: never;
+  url: '/api/bookings';
+};
+
+export type CreateBookingErrors = {
+  /**
+   * The server could not understand the request due to invalid syntax.
+   */
+  400: ApiError;
+  /**
+   * The server cannot find the requested resource.
+   */
+  404: ApiError;
+  /**
+   * The request conflicts with the current state of the server.
+   */
+  409: ApiError;
+};
+
+export type CreateBookingError = CreateBookingErrors[keyof CreateBookingErrors];
+
+export type CreateBookingResponses = {
+  /**
+   * The request has succeeded and a new resource has been created as a result.
+   */
+  201: Booking;
+};
+
+export type CreateBookingResponse = CreateBookingResponses[keyof CreateBookingResponses];
 
 export type ListEventTypesData = {
   body?: never;

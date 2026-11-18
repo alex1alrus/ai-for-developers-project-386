@@ -28,6 +28,83 @@ export const ApiErrorCodeSchema = {
   ]
 } as const;
 
+export const BookingSchema = {
+  type: 'object',
+  required: [
+    'id',
+    'eventTypeId',
+    'start',
+    'guestName',
+    'guestEmail',
+    'end'
+  ],
+  properties: {
+    id: {
+      type: 'string',
+      format: 'uuid'
+    },
+    eventTypeId: {
+      type: 'string'
+    },
+    start: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Must be a start of a slot of the event type.'
+    },
+    guestName: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 100,
+      pattern: '^\\S(.*\\S)?$',
+      description: 'No surrounding whitespace, no line breaks.'
+    },
+    guestEmail: {
+      type: 'string',
+      maxLength: 254,
+      pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'
+    },
+    end: {
+      type: 'string',
+      format: 'date-time',
+      description: '`start` plus the event type\'s duration.'
+    }
+  },
+  description: 'An interval `[start, end)` a guest took for an event type.'
+} as const;
+
+export const BookingRequestSchema = {
+  type: 'object',
+  required: [
+    'eventTypeId',
+    'start',
+    'guestName',
+    'guestEmail'
+  ],
+  properties: {
+    eventTypeId: {
+      type: 'string'
+    },
+    start: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Must be a start of a slot of the event type.'
+    },
+    guestName: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 100,
+      pattern: '^\\S(.*\\S)?$',
+      description: 'No surrounding whitespace, no line breaks.'
+    },
+    guestEmail: {
+      type: 'string',
+      maxLength: 254,
+      pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'
+    }
+  },
+  description: 'What a guest sends to book a slot.'
+} as const;
+
 export const EventTypeSchema = {
   type: 'object',
   required: [

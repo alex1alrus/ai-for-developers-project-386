@@ -4,7 +4,46 @@ info:
   version: 0.0.0
 tags:
   - name: EventTypes
+  - name: Bookings
 paths:
+  /api/bookings:
+    post:
+      operationId: createBooking
+      description: Books a free slot; no overlap with any booking of any event type.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - Bookings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingRequest'
   /api/event-types:
     get:
       operationId: listEventTypes
@@ -100,6 +139,65 @@ components:
         - EVENT_TYPE_NOT_FOUND
         - EVENT_TYPE_EXISTS
         - BOOKING_CONFLICT
+    Booking:
+      type: object
+      required:
+        - id
+        - eventTypeId
+        - start
+        - guestName
+        - guestEmail
+        - end
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventTypeId:
+          type: string
+        start:
+          type: string
+          format: date-time
+          description: Must be a start of a slot of the event type.
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: ^\S(.*\S)?$
+          description: No surrounding whitespace, no line breaks.
+        guestEmail:
+          type: string
+          maxLength: 254
+          pattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+        end:
+          type: string
+          format: date-time
+          description: "`start` plus the event type's duration."
+      description: An interval `[start, end)` a guest took for an event type.
+    BookingRequest:
+      type: object
+      required:
+        - eventTypeId
+        - start
+        - guestName
+        - guestEmail
+      properties:
+        eventTypeId:
+          type: string
+        start:
+          type: string
+          format: date-time
+          description: Must be a start of a slot of the event type.
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: ^\S(.*\S)?$
+          description: No surrounding whitespace, no line breaks.
+        guestEmail:
+          type: string
+          maxLength: 254
+          pattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+      description: What a guest sends to book a slot.
     EventType:
       type: object
       required:
