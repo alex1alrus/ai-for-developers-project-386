@@ -64,20 +64,32 @@
 
 ## Стек
 
-- Разное
+- TypeScript, React, Mantine, Vite — фронтенд;
+- Fastify на Node.js 24 — бекенд;
+- Vitest, oxlint, `tsc`;
+- mise (версии инструментов и задачи), hk (git-хуки), pitchfork (фоновые серверы);
+- GitHub Actions.
 
 ## Установка
 
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
+Нужен [mise](https://mise.jdx.dev/getting-started.html).
 
 ```bash
 git clone https://github.com/alex1alrus/ai-for-developers-project-386.git
 cd ai-for-developers-project-386
+mise trust
+mise install
 ```
+
+`mise install` ставит Node.js, hk и pitchfork из `mise.toml`, npm-зависимости и pre-commit хук.
 
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+```bash
+mise run dev      # API на http://127.0.0.1:3000, интерфейс на http://127.0.0.1:5173
+mise daemons stop # остановить серверы
+mise run check    # линтер, проверка типов и тесты
+```
 
 ---
 
