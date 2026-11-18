@@ -4,6 +4,7 @@ import BookingPage from './pages/BookingPage.tsx'
 import CatalogPage from './pages/CatalogPage.tsx'
 import HomePage from './pages/HomePage.tsx'
 import OwnerArea from './pages/OwnerArea.tsx'
+import OwnerBookingsPage from './pages/OwnerBookingsPage.tsx'
 import OwnerEventTypesPage from './pages/OwnerEventTypesPage.tsx'
 
 export default function App() {
@@ -28,8 +29,8 @@ export default function App() {
             <Route path="/book" element={<CatalogPage />} />
             <Route path="/book/:eventTypeId" element={<BookingPage />} />
             <Route path="/owner" element={<OwnerArea />}>
-              {/* Spec #12: /owner goes to bookings once that tab exists. */}
-              <Route index element={<Navigate to="event-types" replace />} />
+              <Route index element={<Navigate to="bookings" replace />} />
+              <Route path="bookings" element={<OwnerBookingsPage />} />
               <Route path="event-types" element={<OwnerEventTypesPage />} />
             </Route>
           </Routes>

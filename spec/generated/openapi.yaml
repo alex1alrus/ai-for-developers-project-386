@@ -7,6 +7,21 @@ tags:
   - name: Bookings
 paths:
   /api/bookings:
+    get:
+      operationId: listBookings
+      description: Upcoming bookings (`end > now`, ongoing included) of all event types sorted by start.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+      tags:
+        - Bookings
     post:
       operationId: createBooking
       description: Books a free slot; no overlap with any booking of any event type.

@@ -34,6 +34,10 @@ export function buildApp() {
       }
       reply.code(200).send(freeSlots(eventType.durationMinutes, bookings, new Date()))
     },
+    listBookings(_req, reply) {
+      const now = Date.now()
+      reply.code(200).send(bookings.filter((b) => Date.parse(b.end) > now).toSorted((a, b) => a.start.localeCompare(b.start)))
+    },
     // Synchronous: no await between the conflict check and the push, so concurrent requests cannot both pass.
     createBooking(req, reply) {
       const { eventTypeId, start } = req.body
