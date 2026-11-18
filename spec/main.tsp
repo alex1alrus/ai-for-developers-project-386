@@ -104,7 +104,12 @@ interface EventTypes {
         @body body: ApiError;
       };
 
-  /** Free slots of the booking window sorted by start. */
+  /**
+   * Free slots of the booking window sorted by start.
+   * The service time zone is UTC. The booking window is 14 UTC dates: today (UTC) and the next 13 days.
+   * Working hours are 09:00–18:00 UTC every day. Slot starts follow a 30-minute grid from 09:00,
+   * a slot lasts the event type's duration and ends no later than 18:00. Past slots are not listed.
+   */
   @get
   @route("{id}/slots")
   @OpenAPI.operationId("listSlots")
