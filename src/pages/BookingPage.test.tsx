@@ -61,7 +61,8 @@ test('shows dates of the window in local time and the slots of the selected date
 
   open('/book/intro')
 
-  expect(await screen.findByRole('heading', { name: 'Знакомство' })).toBeTruthy()
+  expect(await screen.findByRole('heading', { level: 2, name: 'Знакомство' })).toBeTruthy()
+  expect(screen.getByRole('heading', { level: 1, name: 'Выберите время' })).toBeTruthy()
   expect(search()).toBe('?date=2026-11-18')
   expect(screen.getByRole('button', { name: '12:00' })).toBeTruthy()
   expect(screen.getByRole('button', { name: /20 нояб/ }).hasAttribute('disabled')).toBe(true)
@@ -122,6 +123,7 @@ test('shows a loader while loading', () => {
 
   open('/book/intro')
 
+  expect(screen.getByRole('heading', { level: 1, name: 'Выберите время' })).toBeTruthy()
   expect(screen.getByRole('status', { name: 'Загрузка' })).toBeTruthy()
 })
 
