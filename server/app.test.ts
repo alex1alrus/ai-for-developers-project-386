@@ -352,3 +352,18 @@ describe('POST /api/bookings', () => {
     await app.close()
   })
 })
+
+describe.each(['/api/event-types', '/api/bookings'])('POST %s with a malformed body', (url) => {
+  test.each([
+    ['invalid JSON', { 'content-type': 'application/json' }, '{"id":'],
+    ['text/plain', { 'content-type': 'text/plain' }, 'hello'],
+    ['no content type and no body', {}, undefined],
+  ])('answers %s with 400 VALIDATION_ERROR', async (_case, headers, payload) => {
+    const app = buildApp()
+    const res = await app.inject({ method: 'POST', url, headers, payload })
+
+    expect(res.statusCode).toBe(400)
+    expect(res.json()).toEqual({ code: 'VALIDATION_ERROR', message: expect.any(String) })
+    await app.close()
+  })
+})

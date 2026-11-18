@@ -66,9 +66,21 @@ export function buildApp({ webRoot = join(import.meta.dirname, '../dist') } = {}
     },
   }
 
+  // Fastify validates a body only for the content types its schema lists, so anything else must be refused here.
+  app.addHook('onRequest', async (req, reply) => {
+    const content = (req.routeOptions.schema?.body as { content?: object } | undefined)?.content
+    const type = req.headers['content-type']?.split(';')[0].trim().toLowerCase() ?? ''
+    if (content && !Object.hasOwn(content, type)) {
+      const error: ApiError = { code: 'VALIDATION_ERROR', message: `Unsupported content type "${type}"` }
+      return reply.code(400).send(error)
+    }
+  })
+
+  // Client errors (schema, malformed JSON, empty body, ...) all become VALIDATION_ERROR; 5xx stay as they are.
   app.setErrorHandler<FastifyError>((error, _req, reply) => {
-    if (!error.validation) throw error
-    reply.code(400).send({ code: 'VALIDATION_ERROR', message: error.message })
+    if (!error.validation && !(error.statusCode && error.statusCode >= 400 && error.statusCode < 500)) throw error
+    const body: ApiError = { code: 'VALIDATION_ERROR', message: error.message }
+    reply.code(400).send(body)
   })
 
   app.get('/api/health', async () => ({ status: 'ok' }))
