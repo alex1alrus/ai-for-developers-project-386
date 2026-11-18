@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/alex1alrus/ai-for-developers-project-386/compare/v1.1.0...v1.2.0) (2026-11-18)
+
+
+### Features
+
+* label the guest's time zone next to slots and in the confirmation ([#28](https://github.com/alex1alrus/ai-for-developers-project-386/issues/28)) ([14658ad](https://github.com/alex1alrus/ai-for-developers-project-386/commit/14658add3fb3ac9edb8c3f5ef89a2e89a3fb8202))
+
 ## [1.1.0](https://github.com/alex1alrus/ai-for-developers-project-386/compare/v1.0.0...v1.1.0) (2026-11-18)
 
 
