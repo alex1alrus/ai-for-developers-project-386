@@ -1,5 +1,5 @@
 import { Alert, Anchor, Button, Group, Loader, Stack, Text, Title } from '@mantine/core'
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { type ApiError, type EventType, listEventTypes, listSlots, type Slot } from '../api'
 
@@ -31,6 +31,13 @@ const parseLocal = (date: string) => new Date(`${date}T00:00`)
 const dayLabel = new Intl.DateTimeFormat('ru', { weekday: 'short', day: 'numeric', month: 'short' })
 const longDay = new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'long' })
 const time = new Intl.DateTimeFormat('ru', { hour: '2-digit', minute: '2-digit' })
+
+const page = (children: ReactNode) => (
+  <Stack>
+    <Title>Выберите время</Title>
+    {children}
+  </Stack>
+)
 
 function CatalogLink() {
   return (
@@ -81,9 +88,9 @@ export default function BookingPage() {
     if (needsDate) selectDate(freeDates[0], true)
   })
 
-  if (state.status === 'loading' || needsDate) return <Loader role="status" aria-label="Загрузка" />
+  if (state.status === 'loading' || needsDate) return page(<Loader role="status" aria-label="Загрузка" />)
   if (state.status === 'failed') {
-    return (
+    return page(
       <Alert color="red" title="Не удалось загрузить данные">
         <Button variant="light" color="red" onClick={retry}>
           Повторить
@@ -92,7 +99,7 @@ export default function BookingPage() {
     )
   }
   if (state.status === 'notFound') {
-    return (
+    return page(
       <Stack align="start">
         <Text>Тип встречи не найден</Text>
         <CatalogLink />
@@ -102,9 +109,9 @@ export default function BookingPage() {
 
   const nearest = freeDates.find((date) => date > selected) ?? freeDates.at(-1)
 
-  return (
-    <Stack>
-      <Title>{state.eventType.title}</Title>
+  return page(
+    <>
+      <Title order={2}>{state.eventType.title}</Title>
       <Text c="dimmed">
         {state.eventType.durationMinutes} мин. {state.eventType.description}
       </Text>
@@ -148,6 +155,6 @@ export default function BookingPage() {
           )}
         </>
       )}
-    </Stack>
+    </>,
   )
 }
