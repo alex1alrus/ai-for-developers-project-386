@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { buildApp } from './app.ts'
 
 test('app starts and answers health check', async () => {
@@ -74,4 +74,39 @@ test('POST /api/event-types rejects a taken id with EVENT_TYPE_EXISTS', async ()
   expect(res.json()).toMatchObject({ code: 'EVENT_TYPE_EXISTS', message: expect.any(String) })
   expect(await listEventTypes(app)).toEqual([intro])
   await app.close()
+})
+
+describe('GET /api/event-types/{id}/slots', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-18T17:10:00.000Z'))
+  })
+  afterEach(() => vi.useRealTimers())
+
+  test('returns free slots of the window sorted by start', async () => {
+    const app = buildApp()
+    await createEventType(app, intro)
+
+    const res = await app.inject({ method: 'GET', url: '/api/event-types/intro/slots' })
+
+    expect(res.statusCode).toBe(200)
+    const slots = res.json()
+    expect(slots.slice(0, 2)).toEqual([
+      { start: '2026-11-18T17:30:00.000Z', end: '2026-11-18T18:00:00.000Z' },
+      { start: '2026-11-19T09:00:00.000Z', end: '2026-11-19T09:30:00.000Z' },
+    ])
+    expect(slots.at(-1)).toEqual({ start: '2026-12-01T17:30:00.000Z', end: '2026-12-01T18:00:00.000Z' })
+    expect(slots).toHaveLength(1 + 13 * 18)
+    await app.close()
+  })
+
+  test('answers 404 EVENT_TYPE_NOT_FOUND for an unknown event type', async () => {
+    const app = buildApp()
+
+    const res = await app.inject({ method: 'GET', url: '/api/event-types/missing/slots' })
+
+    expect(res.statusCode).toBe(404)
+    expect(res.json()).toMatchObject({ code: 'EVENT_TYPE_NOT_FOUND', message: expect.any(String) })
+    await app.close()
+  })
 })

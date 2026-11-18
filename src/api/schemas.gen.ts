@@ -65,3 +65,22 @@ export const EventTypeSchema = {
   },
   description: 'A call format the owner offers.'
 } as const;
+
+export const SlotSchema = {
+  type: 'object',
+  required: [
+    'start',
+    'end'
+  ],
+  properties: {
+    start: {
+      type: 'string',
+      format: 'date-time'
+    },
+    end: {
+      type: 'string',
+      format: 'date-time'
+    }
+  },
+  description: 'A free interval `[start, end)` of an event type\'s duration; computed, not stored.'
+} as const;

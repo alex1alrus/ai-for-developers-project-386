@@ -3,6 +3,7 @@ import glue from 'fastify-openapi-glue'
 import { join } from 'node:path'
 import type { RouteHandlers } from './api/fastify.gen.ts'
 import type { EventType } from './api/types.gen.ts'
+import { freeSlots } from './slots.ts'
 
 const specification = join(import.meta.dirname, '../spec/generated/openapi.yaml')
 
@@ -22,6 +23,14 @@ export function buildApp() {
       }
       eventTypes.push(req.body)
       reply.code(201).send(req.body)
+    },
+    listSlots(req, reply) {
+      const eventType = eventTypes.find((eventType) => eventType.id === req.params.id)
+      if (!eventType) {
+        reply.code(404).send({ code: 'EVENT_TYPE_NOT_FOUND', message: `Event type "${req.params.id}" not found` })
+        return
+      }
+      reply.code(200).send(freeSlots(eventType.durationMinutes, [], new Date()))
     },
   }
 
