@@ -25,3 +25,19 @@ Tools and tasks live in `mise.toml` (Node, hk, pitchfork pinned there).
 - Commits follow Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`.
 - Server code must use erasable TypeScript only (no enums, namespaces, parameter properties) and import local files with the `.ts` extension.
 - `mise run check` must pass before commit.
+
+## Agent skills
+
+Engineering skills from `mattpocock/skills` live in `.claude/skills/` (pinned in `skills-lock.json`).
+
+### Issue tracker
+
+GitHub Issues of `alex1alrus/ai-for-developers-project-386`, via `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` at the root, decisions in `docs/adr/`. See `docs/agents/domain.md`.
