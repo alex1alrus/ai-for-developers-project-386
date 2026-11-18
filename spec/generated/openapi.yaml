@@ -52,6 +52,33 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/EventType'
+  /api/event-types/{id}/slots:
+    get:
+      operationId: listSlots
+      description: Free slots of the booking window sorted by start.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - EventTypes
 components:
   schemas:
     ApiError:
@@ -103,3 +130,16 @@ components:
           description: Multiple of 15, from 15 to 540.
           multipleOf: 15
       description: A call format the owner offers.
+    Slot:
+      type: object
+      required:
+        - start
+        - end
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+      description: A free interval `[start, end)` of an event type's duration; computed, not stored.

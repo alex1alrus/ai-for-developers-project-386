@@ -1,4 +1,5 @@
 import { Alert, Button, Card, Group, Loader, Stack, Text, Title } from '@mantine/core'
+import { Link } from 'react-router'
 import { useEventTypes } from '../useEventTypes.ts'
 
 export default function CatalogPage() {
@@ -19,7 +20,7 @@ export default function CatalogPage() {
         <Text c="dimmed">Владелец пока не добавил типы встреч.</Text>
       ) : (
         state.eventTypes.map((eventType) => (
-          <Card key={eventType.id} withBorder>
+          <Card key={eventType.id} withBorder component={Link} to={`/book/${eventType.id}`}>
             <Group justify="space-between">
               <Title order={2} size="h4">
                 {eventType.title}

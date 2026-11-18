@@ -29,6 +29,12 @@ model EventType {
   durationMinutes: int32;
 }
 
+/** A free interval `[start, end)` of an event type's duration; computed, not stored. */
+model Slot {
+  start: utcDateTime;
+  end: utcDateTime;
+}
+
 union ApiErrorCode {
   "VALIDATION_ERROR",
   "INVALID_START",
@@ -65,6 +71,17 @@ interface EventTypes {
       }
     | {
         @statusCode statusCode: 409;
+        @body body: ApiError;
+      };
+
+  /** Free slots of the booking window sorted by start. */
+  @get
+  @route("{id}/slots")
+  @OpenAPI.operationId("listSlots")
+  listSlots(@path id: string):
+    | Slot[]
+    | {
+        @statusCode statusCode: 404;
         @body body: ApiError;
       };
 }

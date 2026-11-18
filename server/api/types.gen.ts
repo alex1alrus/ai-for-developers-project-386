@@ -33,6 +33,14 @@ export type EventType = {
   durationMinutes: number;
 };
 
+/**
+ * A free interval `[start, end)` of an event type's duration; computed, not stored.
+ */
+export type Slot = {
+  start: string;
+  end: string;
+};
+
 export type ListEventTypesData = {
   body?: never;
   path?: never;
@@ -77,3 +85,30 @@ export type CreateEventTypeResponses = {
 };
 
 export type CreateEventTypeResponse = CreateEventTypeResponses[keyof CreateEventTypeResponses];
+
+export type ListSlotsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/event-types/{id}/slots';
+};
+
+export type ListSlotsErrors = {
+  /**
+   * The server cannot find the requested resource.
+   */
+  404: ApiError;
+};
+
+export type ListSlotsError = ListSlotsErrors[keyof ListSlotsErrors];
+
+export type ListSlotsResponses = {
+  /**
+   * The request has succeeded.
+   */
+  200: Array<Slot>;
+};
+
+export type ListSlotsResponse = ListSlotsResponses[keyof ListSlotsResponses];
