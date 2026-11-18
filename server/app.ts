@@ -1,14 +1,16 @@
 import Fastify, { type FastifyError } from 'fastify'
 import glue from 'fastify-openapi-glue'
+import fastifyStatic from '@fastify/static'
 import { join } from 'node:path'
 import type { RouteHandlers } from './api/fastify.gen.ts'
-import type { Booking, EventType } from './api/types.gen.ts'
+import type { ApiError, Booking, EventType } from './api/types.gen.ts'
 import { freeSlots } from './slots.ts'
 import { randomUUID } from 'node:crypto'
 
 const specification = join(import.meta.dirname, '../spec/generated/openapi.yaml')
 
-export function buildApp() {
+// `webRoot`: the built frontend (`npm run build`), served with SPA fallback (ADR-0001).
+export function buildApp({ webRoot = join(import.meta.dirname, '../dist') } = {}) {
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' })
   const eventTypes: EventType[] = []
   const bookings: Booking[] = []
@@ -71,6 +73,12 @@ export function buildApp() {
 
   app.get('/api/health', async () => ({ status: 'ok' }))
   app.register(glue, { specification, serviceHandlers })
+  app.register(fastifyStatic, { root: webRoot })
+  app.setNotFoundHandler((req, reply) => {
+    if (req.method === 'GET' && !/^\/api(\/|\?|$)/.test(req.url)) return reply.sendFile('index.html')
+    const error: ApiError = { code: 'NOT_FOUND', message: `${req.method} ${req.url} not found` }
+    return reply.code(404).send(error)
+  })
 
   return app
 }

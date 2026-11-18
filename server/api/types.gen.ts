@@ -12,7 +12,7 @@ export type ApiError = {
   message: string;
 };
 
-export type ApiErrorCode = 'VALIDATION_ERROR' | 'INVALID_START' | 'EVENT_TYPE_NOT_FOUND' | 'EVENT_TYPE_EXISTS' | 'BOOKING_CONFLICT';
+export type ApiErrorCode = 'VALIDATION_ERROR' | 'INVALID_START' | 'EVENT_TYPE_NOT_FOUND' | 'EVENT_TYPE_EXISTS' | 'BOOKING_CONFLICT' | 'NOT_FOUND';
 
 /**
  * An interval `[start, end)` a guest took for an event type.
