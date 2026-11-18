@@ -1,10 +1,10 @@
 import { Stack, Tabs, Title } from '@mantine/core'
-import { Outlet, useLocation, useNavigate } from 'react-router'
+import { Outlet, useMatch, useNavigate } from 'react-router'
 
 /** Owner area layout: tabs over the nested `/owner/*` pages. */
 export default function OwnerArea() {
   const navigate = useNavigate()
-  const tab = useLocation().pathname.split('/')[2]
+  const tab = useMatch('/owner/:tab')?.params.tab ?? null
 
   return (
     <Stack>
