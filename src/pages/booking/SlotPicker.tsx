@@ -1,7 +1,7 @@
 import { Button, Group, Stack, Text } from '@mantine/core'
 import type { ReactNode } from 'react'
 import type { Slot } from '../../api'
-import { dayMonth, time, weekdayDay } from '../../format.ts'
+import { dayMonth, time, timeZoneLabel, weekdayDay } from '../../format.ts'
 
 const parseLocal = (date: string) => new Date(`${date}T00:00`)
 
@@ -38,18 +38,23 @@ export function SlotPicker({ dates, slotsByDate, selected, onSelectDate, picked,
       </Group>
       {!picked && alert}
       {slots ? (
-        <Group gap="xs">
-          {slots.map((slot) => (
-            <Button
-              key={slot.start}
-              variant={slot.start === picked?.start ? 'filled' : 'light'}
-              aria-pressed={slot.start === picked?.start}
-              onClick={() => onPick(slot)}
-            >
-              {time.format(new Date(slot.start))}
-            </Button>
-          ))}
-        </Group>
+        <Stack gap="xs">
+          <Text size="sm" c="dimmed">
+            Время указано в вашем часовом поясе: {timeZoneLabel(new Date(slots[0].start))}
+          </Text>
+          <Group gap="xs">
+            {slots.map((slot) => (
+              <Button
+                key={slot.start}
+                variant={slot.start === picked?.start ? 'filled' : 'light'}
+                aria-pressed={slot.start === picked?.start}
+                onClick={() => onPick(slot)}
+              >
+                {time.format(new Date(slot.start))}
+              </Button>
+            ))}
+          </Group>
+        </Stack>
       ) : (
         <Stack align="start">
           <Text>На эту дату свободного времени нет</Text>
