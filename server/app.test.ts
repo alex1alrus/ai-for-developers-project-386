@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { buildApp } from './app.ts'
 
 test('app starts and answers health check', async () => {
@@ -17,6 +20,53 @@ test('GET /api/event-types returns an empty catalog', async () => {
   expect(res.statusCode).toBe(200)
   expect(res.json()).toEqual([])
   await app.close()
+})
+
+describe('SPA fallback', () => {
+  let webRoot: string
+  beforeEach(() => {
+    webRoot = mkdtempSync(join(tmpdir(), 'web-'))
+    writeFileSync(join(webRoot, 'index.html'), '<!doctype html><div id="root"></div>')
+    writeFileSync(join(webRoot, 'app.js'), 'console.log(1)')
+  })
+  afterEach(() => rmSync(webRoot, { recursive: true }))
+
+  test('GET of a page path returns index.html', async () => {
+    const app = buildApp({ webRoot })
+    const res = await app.inject({ method: 'GET', url: '/owner/bookings' })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toMatch(/^text\/html/)
+    expect(res.body).toContain('<div id="root">')
+    await app.close()
+  })
+
+  test('GET of a built asset returns the file', async () => {
+    const app = buildApp({ webRoot })
+    const res = await app.inject({ method: 'GET', url: '/app.js' })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toBe('console.log(1)')
+    await app.close()
+  })
+
+  test('unknown API path returns 404 JSON, not the page', async () => {
+    const app = buildApp({ webRoot })
+    const res = await app.inject({ method: 'GET', url: '/api/unknown' })
+
+    expect(res.statusCode).toBe(404)
+    expect(res.json()).toEqual({ code: 'NOT_FOUND', message: 'GET /api/unknown not found' })
+    await app.close()
+  })
+
+  test('non-GET outside the API returns 404 JSON', async () => {
+    const app = buildApp({ webRoot })
+    const res = await app.inject({ method: 'POST', url: '/owner/bookings' })
+
+    expect(res.statusCode).toBe(404)
+    expect(res.json()).toMatchObject({ code: 'NOT_FOUND' })
+    await app.close()
+  })
 })
 
 const intro = { id: 'intro', title: 'Знакомство', description: 'Короткий звонок', durationMinutes: 30 }

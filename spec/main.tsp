@@ -68,6 +68,9 @@ union ApiErrorCode {
   "EVENT_TYPE_NOT_FOUND",
   "EVENT_TYPE_EXISTS",
   "BOOKING_CONFLICT",
+
+  // Unknown path under `/api`, or a non-GET request outside it.
+  "NOT_FOUND",
 }
 
 @error

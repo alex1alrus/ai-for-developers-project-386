@@ -24,7 +24,8 @@ export const ApiErrorCodeSchema = {
     'INVALID_START',
     'EVENT_TYPE_NOT_FOUND',
     'EVENT_TYPE_EXISTS',
-    'BOOKING_CONFLICT'
+    'BOOKING_CONFLICT',
+    'NOT_FOUND'
   ]
 } as const;
 
